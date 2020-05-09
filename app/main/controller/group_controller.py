@@ -25,16 +25,25 @@ group_write_ret = GroupDto.group_write_ret
 
 
 @api.route('/<group_id>')
+@api.response(HTTPStatus.NOT_FOUND, 'Group not found')
 class Group(Resource):
     """ Group Resource """
 
     @api.doc('Export a group', security='jwt')
-    @api.marshal_with(group)
+    @api.marshal_with(group_write_ret)
     @token_required
     def get(self, group_id):
         """ Export a group """
         group_id = int(group_id)
-        return get_a_group(group_id)
+        group = get_a_group(group_id)
+        if group:
+            return dict(
+                group=group,
+            ), HTTPStatus.OK
+        else:
+            return dict(
+                error='Group not found'
+            ), HTTPStatus.NOT_FOUND
 
     @api.doc('Delete a group', security='jwt')
     @token_required

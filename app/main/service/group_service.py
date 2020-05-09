@@ -77,10 +77,11 @@ def delete_group(group_id, creator_id):
         creator_id=creator_id
     ).delete()
     if deletions:
+        # db.session.commit()
         return dict(), HTTPStatus.NO_CONTENT
     else:
         return dict(
-            error='Could not find the group for deletion'
+            error='Group not found'
         ), HTTPStatus.NOT_FOUND
 
 def create_group_invite(public_id_sender, public_id_invitee, group_id):

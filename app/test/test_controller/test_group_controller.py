@@ -66,8 +66,8 @@ class TestGroupController(BaseTestCase):
 
         super().tearDown()
 
-    def test_create_group(self):
-        """ Test for group creation """
+    def test_create_delete_group(self):
+        """ Test for group creation and deletion """
         with self.client:
             # group creation
             response = self.client.post(
@@ -82,28 +82,23 @@ class TestGroupController(BaseTestCase):
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertEqual(data['group']['name'], 'Apartment')
+            group_id = data['group']['id']
+
+            # query the group to make sure it is created
+            response = self.client.get(
+                '/groups/%s' % group_id,
+                headers=dict(
+                    Authorization=self.auth
+                )
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, HTTPStatus.OK)
             self.assertEqual(data['group']['name'], 'Apartment')
 
-    def test_create_delete_group(self):
-        """ Test for group deletion """
-        with self.client:
-            # group creation
-            response = self.client.post(
-                '/groups/',
-                data=json.dumps(dict(
-                    name='Apartment'
-                )),
-                headers=dict(
-                    Authorization=self.auth
-                ),
-                content_type='application/json'
-            )
-            data = json.loads(response.data.decode())
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
-            self.assertEqual(data['group']['name'], 'Apartment')
             # group deletion
             response = self.client.delete(
-                '/groups/%s' % data['group']['id'],
+                '/groups/%s' % group_id,
                 headers=dict(
                     Authorization=self.auth
                 ),
@@ -111,6 +106,17 @@ class TestGroupController(BaseTestCase):
             )
             self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
             self.assertEqual(response.data.decode(), '')
+
+            # query the group to make sure it is deleted
+            response = self.client.get(
+                '/groups/%s' % group_id,
+                headers=dict(
+                    Authorization=self.auth
+                )
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+            self.assertEqual(data['error'], 'Group not found')
 
     def test_create_modify_delete_group(self):
         """ Test for group update """
