@@ -16,6 +16,8 @@ from ..util.dto import AuthDto, GroupDto
 api = GroupDto.api
 group = GroupDto.group
 group_write = GroupDto.group_write
+group_post_parser = GroupDto.group_post_parser
+group_patch_parser = GroupDto.group_patch_parser
 group_write_ret = GroupDto.group_write_ret
 
 # group_invitation = GroupDto.group_invitation
@@ -45,16 +47,21 @@ class Group(Resource):
 
     @api.doc('Update a group', security='jwt')
     @api.expect(group_write, validate=True)
-    @api.response(400, 'Bad Request')
+    @api.response(HTTPStatus.BAD_REQUEST, 'Empty body / Unknown arguments')
     @api.marshal_with(group_write_ret)
     @token_required
     def patch(self, group_id):
         """ Update a group """
+        if not request.json:
+            return dict(
+                error="Empty body"
+            ), HTTPStatus.BAD_REQUEST
+
         try:
-            data = group_write.parse_args(strict=True)
+            data = group_patch_parser.parse_args(strict=True)
         except BadRequest:
             return dict(
-                error="Bad Request"
+                error="Unknown arguments"
             ), HTTPStatus.BAD_REQUEST
         else:
             group_id = int(group_id)
@@ -69,15 +76,26 @@ class GroupList(Resource):
 
     @api.doc('Create a new group', security='jwt')
     @api.expect(group_write)
-    @api.response(404, 'Unexpected input')
+    @api.response(HTTPStatus.BAD_REQUEST, 'Empty body / Unknown arguments')
     @api.marshal_with(group_write_ret)
     @token_required
     def post(self):
         """ Create a new group """
-        post_data = request.json
+        if not request.json:
+            return dict(
+                error="Empty body"
+            ), HTTPStatus.BAD_REQUEST
+
         auth_token = request.headers.get('Authorization')
-        creator_id = User.decode_auth_token(auth_token)
-        return create_group(post_data, creator_id)
+        try:
+            data = group_post_parser.parse_args(strict=True)
+        except BadRequest:
+            return dict(
+                error="Unknown arguments"
+            ), HTTPStatus.BAD_REQUEST
+        else:
+            creator_id = User.decode_auth_token(auth_token)
+            return create_group(data, creator_id)
 
     @api.doc('Returns all the groups', security='jwt')
     @api.marshal_list_with(group)

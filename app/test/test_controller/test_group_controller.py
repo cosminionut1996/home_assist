@@ -176,7 +176,7 @@ class TestGroupController(BaseTestCase):
             self.assertEqual(data['group']['name'], 'Apartment')
             group_id = data['group']['id']
 
-            # group update
+            # group update with bad data
             response = self.client.patch(
                 '/groups/{}'.format(group_id),
                 data=json.dumps(dict(
@@ -190,7 +190,20 @@ class TestGroupController(BaseTestCase):
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-            self.assertEqual(data['error'], 'Bad Request')
+            self.assertEqual(data['error'], 'Unknown arguments')
+
+            # group update with no data
+            response = self.client.patch(
+                '/groups/{}'.format(group_id),
+                data=json.dumps(dict()),
+                headers=dict(
+                    Authorization=self.auth
+                ),
+                content_type='application/json'
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+            self.assertEqual(data['error'], 'Empty body')
 
             # group deletion
             response = self.client.delete(

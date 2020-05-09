@@ -29,12 +29,18 @@ class GroupDto:
     })
 
     # Perform create / update ops only on those fields
-    # group_write = api.model('GroupUpdate', {
-    #     'name': fields.String(required=False, description='The name of the group'),
-    # })
+    group_write = api.model('GroupUpdate', {
+        'name': fields.String(description='The name of the group'),
+    })
 
-    group_write = reqparse.RequestParser()
-    group_write.add_argument('name', type=str, required=False, help='The name of the group')
+    group_post_parser = reqparse.RequestParser()
+    group_post_parser.add_argument('name', type=str, required=True, location='json')
+
+    group_patch_parser = reqparse.RequestParser()
+    group_patch_parser.add_argument('name', type=str, required=False, location='json')
+
+
+    # group_write.add_argument('name2', type=str, required=True, help='The name of the group')
 
     group_write_ret = api.model('GroupCreateRet', {
         'group': fields.Nested(group),
