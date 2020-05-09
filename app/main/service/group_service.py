@@ -51,6 +51,10 @@ def get_a_group(group_id=None, creator_id=None):
 
 def update_group(data, group_id=None, creator_id=None):
     group = get_a_group(group_id=group_id, creator_id=creator_id)
+    if not group:
+        return dict(
+            error='Group not found'
+        ), HTTPStatus.NOT_FOUND
     if group:
         for key, value in data.items():
             group.__setattr__(key, value)
@@ -77,7 +81,7 @@ def delete_group(group_id, creator_id):
         creator_id=creator_id
     ).delete()
     if deletions:
-        # db.session.commit()
+        db.session.commit()
         return dict(), HTTPStatus.NO_CONTENT
     else:
         return dict(
