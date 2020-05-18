@@ -1,6 +1,6 @@
 
 from app.main import db
-from app.main.model.group import Group, GroupInvite
+from app.main.model.group import Group
 from http import HTTPStatus
 
 
@@ -87,22 +87,3 @@ def delete_group(group_id, creator_id):
         return dict(
             error='Group not found'
         ), HTTPStatus.NOT_FOUND
-
-def create_group_invite(public_id_sender, public_id_invitee, group_id):
-    group_invite = GroupInvite(
-        public_id_sender=public_id_sender,
-        public_id_invitee=public_id_invitee,
-        group_id=group_id,
-        token='hello'
-    )
-    try:
-        db.session.add(group)
-        db.session.commit()
-        return dict(
-            public_id_invitee=group_invite.public_id_invitee,
-            public_id_sender=group_invite.public_id_sender,
-        ), HTTPStatus.CREATED
-    except Exception as e:
-        return dict(
-            error='Encountered an unexpected error'
-        ), HTTPStatus.INTERNAL_SERVER_ERROR

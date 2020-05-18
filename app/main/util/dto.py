@@ -39,25 +39,20 @@ class GroupDto:
     group_patch_parser = reqparse.RequestParser()
     group_patch_parser.add_argument('name', type=str, required=False, location='json')
 
-
-    # group_write.add_argument('name2', type=str, required=True, help='The name of the group')
-
     group_write_ret = api.model('GroupCreateRet', {
         'group': fields.Nested(group),
         'error': fields.String(description='Error message'),
     })
 
+class InvitationDto:
+    api = Namespace('invitations', description='???')
 
-    # group_invitation = api.model('GroupInvitation', {
-    #     'name': fields.String(required=True, description="Chosen group name"),
-    #     'public_id_invitee': fields.String(required=True, description="The invited person's public id"),
-    # })
-
-    # group_invitation_create_ret = api.model('GroupInvitationCreateRet', {
-    #     'group_invitation': fields.Nested(api.model('_GroupInvitation', {
-    #         'public_id_invitee': fields.String(),
-    #         'public_id_sender': fields.String(),
-    #         'name': fields.String()
-    #     })),
-    #     'error': fields.String(description='Error message'),
-    # })
+    invitation = api.model('Invitation', {
+        'id': fields.Integer(description='Invitation numeric ID'),
+        'public_id_sender': fields.String(description='The id of the sender of the invitation'),
+        'public_id_invitee': fields.String(description='The id of the invitee of the invitation'),
+        'resource_id': fields.Integer(description='The id of the resource the invitation belongs to'),
+        'resource_type': fields.String(description='The type of resource the invitation is associated with'),
+        'token': fields.String(description='Token that can be used for accepting the invitation'),
+        'status': fields.String(description='The status of the invitation')
+    })

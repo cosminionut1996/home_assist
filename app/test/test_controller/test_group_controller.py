@@ -5,7 +5,7 @@ from app.main.model.blacklist import BlacklistToken
 import json
 from app.test.base import BaseTestCase
 from http import HTTPStatus
-from app.main.controller.group_controller import create_group, create_group_invite
+from app.main.controller.group_controller import create_group
 
 
 def register_user(self):
