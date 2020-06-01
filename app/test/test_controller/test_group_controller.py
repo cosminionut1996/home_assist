@@ -19,7 +19,6 @@ def register_user(self):
         content_type='application/json'
     )
 
-
 def login_user(self):
     return self.client.post(
         '/auth/login',
@@ -29,7 +28,6 @@ def login_user(self):
         )),
         content_type='application/json'
     )
-
 
 class TestGroupController(BaseTestCase):
 
