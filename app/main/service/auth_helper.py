@@ -2,6 +2,7 @@ from app.main.model.user import User
 
 from ..service.blacklist_service import save_token
 from http import HTTPStatus
+import uuid
 
 
 def login_user(data):
@@ -9,7 +10,7 @@ def login_user(data):
         # fetch the user data
         user = User.query.filter_by(email=data.get('email')).first()
         if user and user.check_password(data.get('password')):
-            auth_token = User.encode_auth_token(user.id)
+            auth_token = User.encode_auth_token(user._uuid)
             if auth_token:
                 return dict(
                     data={
@@ -53,10 +54,11 @@ def get_logged_in_user(new_request):
     if auth_token:
         resp = User.decode_auth_token(auth_token)
         if not isinstance(resp, str):
-            user = User.query.filter_by(id=resp).first()
+            user = User.query.filter_by(_uuid=resp).first()
+            new_request.user = user
             return dict(
                 data={
-                    'user_id': user.id,
+                    '_uuid': user._uuid,
                     'email': user.email,
                     'admin': user.admin,
                     'registered_on': str(user.registered_on)

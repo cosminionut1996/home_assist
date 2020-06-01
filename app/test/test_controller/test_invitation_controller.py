@@ -31,7 +31,7 @@ def login_user(self):
     )
 
 
-class TestGroupController(BaseTestCase):
+class TestInvitationController(BaseTestCase):
 
     def setUp(self):
         super().setUp()
@@ -83,11 +83,11 @@ class TestGroupController(BaseTestCase):
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, HTTPStatus.CREATED)
             self.assertEqual(data['group']['name'], 'Apartment')
-            uuid_group = data['group']['_uuid']
+            group_id = data['group']['_uuid']
 
             # query the group to make sure it is created
             response = self.client.get(
-                '/groups/%s' % uuid_group,
+                '/groups/%s' % group_id,
                 headers=dict(
                     Authorization=self.auth
                 )
@@ -98,7 +98,7 @@ class TestGroupController(BaseTestCase):
 
             # group deletion
             response = self.client.delete(
-                '/groups/%s' % uuid_group,
+                '/groups/%s' % group_id,
                 headers=dict(
                     Authorization=self.auth
                 ),
@@ -109,7 +109,7 @@ class TestGroupController(BaseTestCase):
 
             # query the group to make sure it is deleted
             response = self.client.get(
-                '/groups/%s' % uuid_group,
+                '/groups/%s' % group_id,
                 headers=dict(
                     Authorization=self.auth
                 )
@@ -180,11 +180,11 @@ class TestGroupController(BaseTestCase):
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, HTTPStatus.CREATED)
             self.assertEqual(data['group']['name'], 'Apartment')
-            group_id = data['group']['_uuid']
+            group_uuid = data['group']['_uuid']
 
             # group update with bad data
             response = self.client.patch(
-                '/groups/{}'.format(group_id),
+                '/groups/{}'.format(group_uuid),
                 data=json.dumps(dict(
                     name='MyApartment',
                     id=123
@@ -200,7 +200,7 @@ class TestGroupController(BaseTestCase):
 
             # group update with no data
             response = self.client.patch(
-                '/groups/{}'.format(group_id),
+                '/groups/{}'.format(group_uuid),
                 data=json.dumps(dict()),
                 headers=dict(
                     Authorization=self.auth
@@ -213,7 +213,7 @@ class TestGroupController(BaseTestCase):
 
             # group deletion
             response = self.client.delete(
-                '/groups/%s' % group_id,
+                '/groups/%s' % group_uuid,
                 headers=dict(
                     Authorization=self.auth
                 ),

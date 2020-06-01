@@ -5,10 +5,10 @@ from flask_restplus.swagger import Model
 class UserDto:
     api = Namespace('users', description='user related operations')
     user = api.model('User', {
+        '_uuid': fields.String(description='User UUID'),
         'email': fields.String(required=True, description='user email address'),
         'username': fields.String(required=True, description='user username'),
-        'password': fields.String(required=True, description='user password'),
-        'public_id': fields.String(description='user Identifier')
+        'password': fields.String(required=True, description='user password')
     })
 
 class AuthDto:
@@ -22,8 +22,8 @@ class GroupDto:
     api = Namespace('groups', description='group related operations')
 
     group = api.model('Group', {
-        'id': fields.Integer(description='Group numeric ID'),
-        'creator_id': fields.Integer(description='Id of the user that created the group'),
+        '_uuid': fields.String(description='Group UUID'),
+        'uuid_creator': fields.String(description='uuid of the user that created the group'),
         'date_created': fields.DateTime(description='Date of creation for the group'),
         'name': fields.String(required=True, description='The name of the group')
     })
@@ -45,14 +45,20 @@ class GroupDto:
     })
 
 class InvitationDto:
-    api = Namespace('invitations', description='???')
+    api = Namespace('invitations', description='invitation related operations')
 
     invitation = api.model('Invitation', {
-        'id': fields.Integer(description='Invitation numeric ID'),
-        'public_id_sender': fields.String(description='The id of the sender of the invitation'),
-        'public_id_invitee': fields.String(description='The id of the invitee of the invitation'),
-        'resource_id': fields.Integer(description='The id of the resource the invitation belongs to'),
+        '_uuid': fields.String(description='Invitation UUID'),
+        'uuid_sender': fields.String(description='The uuid of the sender of the invitation'),
+        'uuid_invitee': fields.String(description='The uuid of the invitee of the invitation'),
+        'uuid_resource': fields.String(description='The uuid of the resource the invitation belongs to'),
         'resource_type': fields.String(description='The type of resource the invitation is associated with'),
         'token': fields.String(description='Token that can be used for accepting the invitation'),
         'status': fields.String(description='The status of the invitation')
+    })
+
+    invitations_fetch = api.model('InvitationFetch', {
+        'received': fields.Boolean(description='Return the invitations received by the user'),
+        'sent': fields.Boolean(description='Return the invitations sent by the user'),
+        'resource_type': fields.String(description='The type of resource the invitation is associated with')
     })

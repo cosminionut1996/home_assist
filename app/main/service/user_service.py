@@ -7,10 +7,11 @@ from http import HTTPStatus
 
 
 def save_new_user(data):
+    """ data is a dictionary that contains
+        public_id, email, username, password, registered_on """
     user = User.query.filter_by(email=data['email']).first()
     if not user:
         new_user = User(
-            public_id=str(uuid.uuid4()),
             email=data['email'],
             username=data['username'],
             password=data['password'],
@@ -35,7 +36,7 @@ def get_a_user(public_id):
 def generate_token(user):
     try:
         # generate the auth token
-        auth_token = User.encode_auth_token(user.id)
+        auth_token = User.encode_auth_token(user._uuid)
         return dict(
             data={
                 'Authorization': auth_token.decode()

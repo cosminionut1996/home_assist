@@ -19,7 +19,7 @@ group_patch_parser = GroupDto.group_patch_parser
 group_write_ret = GroupDto.group_write_ret
 
 
-@api.route('/<group_id>')
+@api.route('/<uuid_group>')
 @api.response(HTTPStatus.NOT_FOUND, 'Group not found')
 class Group(Resource):
     """ Group Resource """
@@ -27,10 +27,9 @@ class Group(Resource):
     @api.doc('Export a group', security='jwt')
     @api.marshal_with(group_write_ret)
     @token_required
-    def get(self, group_id):
+    def get(self, uuid_group):
         """ Export a group """
-        group_id = int(group_id)
-        group = get_a_group(group_id)
+        group = get_a_group(uuid_group)
         if group:
             return dict(
                 group=group,
@@ -42,19 +41,16 @@ class Group(Resource):
 
     @api.doc('Delete a group', security='jwt')
     @token_required
-    def delete(self, group_id):
+    def delete(self, uuid_group):
         """ Delete a group """
-        group_id = int(group_id)
-        auth_token = request.headers.get('Authorization')
-        creator_id = User.decode_auth_token(auth_token)
-        return delete_group(group_id, creator_id)
+        return delete_group(uuid_group, request.user._uuid)
 
     @api.doc('Update a group', security='jwt')
     @api.expect(group_write, validate=True)
     @api.response(HTTPStatus.BAD_REQUEST, 'Empty body / Unknown arguments')
     @api.marshal_with(group_write_ret)
     @token_required
-    def patch(self, group_id):
+    def patch(self, uuid_group):
         """ Update a group """
         if not request.json:
             return dict(
@@ -68,10 +64,7 @@ class Group(Resource):
                 error="Unknown arguments"
             ), HTTPStatus.BAD_REQUEST
         else:
-            group_id = int(group_id)
-            auth_token = request.headers.get('Authorization')
-            creator_id = User.decode_auth_token(auth_token)
-            return update_group(data, group_id, creator_id)
+            return update_group(data, uuid_group, request.user._uuid)
 
 
 @api.route('/')
@@ -90,7 +83,6 @@ class GroupList(Resource):
                 error="Empty body"
             ), HTTPStatus.BAD_REQUEST
 
-        auth_token = request.headers.get('Authorization')
         try:
             data = group_post_parser.parse_args(strict=True)
         except BadRequest:
@@ -98,8 +90,7 @@ class GroupList(Resource):
                 error="Unknown arguments"
             ), HTTPStatus.BAD_REQUEST
         else:
-            creator_id = User.decode_auth_token(auth_token)
-            return create_group(data, creator_id)
+            return create_group(data, request.user._uuid)
 
     @api.doc('Returns all the groups', security='jwt')
     @api.marshal_list_with(group)

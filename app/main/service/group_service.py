@@ -4,21 +4,21 @@ from app.main.model.group import Group
 from http import HTTPStatus
 
 
-def create_group(data, creator_id):
+def create_group(data, uuid_creator):
     # TODO: A user might want to create multiple groups and they should be stored differently
-    group = get_a_group(creator_id=creator_id)
+    group = get_a_group(uuid_creator=uuid_creator)
     if group:
         return dict(
             group={
-                "creator_id": group.creator_id,
+                "uuid_creator": group.uuid_creator,
                 "date_created": group.date_created,
                 "name": group.name,
-                "id": group.id
+                "_uuid": group._uuid
             }
         ), HTTPStatus.FOUND
 
     group = Group(
-        creator_id=creator_id,
+        uuid_creator=uuid_creator,
         name=data['name']
     )
     try:
@@ -27,10 +27,10 @@ def create_group(data, creator_id):
         db.session.commit()
         return dict(
             group={
-                "creator_id": group.creator_id,
+                "uuid_creator": group.uuid_creator,
                 "date_created": group.date_created,
                 "name": group.name,
-                "id": group.id
+                "_uuid": group._uuid
             }
         ), HTTPStatus.CREATED
     except Exception as e:
@@ -41,16 +41,16 @@ def create_group(data, creator_id):
 def get_all_groups():
     return Group.query.all()
 
-def get_a_group(group_id=None, creator_id=None):
+def get_a_group(uuid_group=None, uuid_creator=None):
     # TODO: A user might want to create multiple groups and they should be stored differently
-    if group_id:
-        return Group.query.filter_by(id=group_id).first()
-    elif creator_id:
-        return Group.query.filter_by(creator_id=creator_id).first()
+    if uuid_group:
+        return Group.query.filter_by(_uuid=uuid_group).first()
+    elif uuid_creator:
+        return Group.query.filter_by(uuid_creator=uuid_creator).first()
     raise ValueError("Bad parameters chosen for group filter.")
 
-def update_group(data, group_id=None, creator_id=None):
-    group = get_a_group(group_id=group_id, creator_id=creator_id)
+def update_group(data, uuid_group=None, uuid_creator=None):
+    group = get_a_group(uuid_group=uuid_group, uuid_creator=uuid_creator)
     if not group:
         return dict(
             error='Group not found'
@@ -64,10 +64,10 @@ def update_group(data, group_id=None, creator_id=None):
         db.session.commit()
         return dict(
             group={
-                "creator_id": group.creator_id,
+                "uuid_creator": group.uuid_creator,
                 "date_created": group.date_created,
                 "name": group.name,
-                "id": group.id
+                "_uuid": group._uuid
             }
         ), HTTPStatus.OK
     except Exception as e:
@@ -75,10 +75,10 @@ def update_group(data, group_id=None, creator_id=None):
             error='Encountered an unexpected error'
         ), HTTPStatus.INTERNAL_SERVER_ERROR
 
-def delete_group(group_id, creator_id):
+def delete_group(uuid_group, uuid_creator):
     deletions = Group.query.filter_by(
-        id=group_id,
-        creator_id=creator_id
+        _uuid=uuid_group,
+        uuid_creator=uuid_creator
     ).delete()
     if deletions:
         db.session.commit()

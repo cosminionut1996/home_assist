@@ -2,15 +2,24 @@ from http import HTTPStatus
 
 from app.main import db
 from app.main.model.invitation import Invitation
+from app.main.model.membership import Membership
+from app.main.model.user import User
+
+import random
+import string
 
 
-def create_group_invitation(public_id_sender, public_id_invitee, group_id):
+def rand_alphanum_str(stringLength=64):
+    lettersAndDigits = string.ascii_letters + string.digits
+    return ''.join((random.choice(lettersAndDigits) for i in range(stringLength)))
+
+def create_group_invitation(uuid_sender, uuid_invitee, uuid_group):
     group_invite = Invitation(
-        public_id_sender=public_id_sender,
-        public_id_invitee=public_id_invitee,
+        uuid_sender=uuid_sender,
+        uuid_invitee=uuid_invitee,
+        uuid_resource=uuid_group,
         resource_type='group',
-        resource_id=group_id,
-        token='hello'   # TODO: Generate random token
+        token=rand_alphanum_str()
     )
     try:
         db.session.add(group_invite)
@@ -18,11 +27,11 @@ def create_group_invitation(public_id_sender, public_id_invitee, group_id):
         return {
             x: getattr(group_invite, x)
             for x in (
-                'id',
-                'public_id_sender',
-                'public_id_invitee',
+                '_uuid',
+                'uuid_sender',
+                'uuid_invitee',
                 'resource_type',
-                'resource_id',
+                'uuid_resource',
                 'token'
             )
         }, HTTPStatus.CREATED
@@ -31,13 +40,53 @@ def create_group_invitation(public_id_sender, public_id_invitee, group_id):
             error='Encountered an unexpected error'
         ), HTTPStatus.INTERNAL_SERVER_ERROR
 
-
 def accept_group_invitation():
     pass
 
 def decline_group_invitation():
     pass
 
-def get_invitations(public_id, resource_type=None):
-    qr = Invitation.query.filter_by(public_id_invitee=public_id).all()
+# def get_invitation(invitation_id, user_id):
+#     """ Get an invitation if the user has privilege to see it or is an admin """
+#     qr = Invitation.query \
+#         .filter(Invitation.id == invitation_id) \
+#         .join(User, (
+#             (User.id == user_id)
+#             & ( (User.public_id == Invitation.uuid_sender) 
+#                 | (User.public_id == Invitation.uuid_invitee)))) \
+#         .first()
+#     return qr, HTTPStatus.OK if qr else HTTPStatus.NOT_FOUND
+
+def get_invitations(
+    uuid_invitee=None,
+    uuid_sender=None,
+    resource_type=None
+):
+    """
+    Queries the invitations table
+    if no public_ids parameters are given, return all invitations
+    if uuid_invitee is given, it will search for the invitations received by this user
+    if uuid_sender is given, it will search for the invitations sent by this user
+    if both public_ids are given it will search for the invitations sent or received by this user
+    if resource_type is given, it will search for the invitations for this resource type
+
+    returns a list of invitations
+    """
+    qr = Invitation.query
+
+    if uuid_invitee and uuid_sender:
+        qr = qr.filter(
+            (Invitation.uuid_invitee==uuid_invitee) 
+            | (Invitation.uuid_sender==uuid_sender)
+        )
+    elif uuid_invitee:
+        qr = qr.filter_by(uuid_invitee=uuid_invitee)
+    elif uuid_sender:
+        qr = qr.filter_by(uuid_sender=uuid_sender)
+
+    if resource_type:
+        qr = qr.filter_by(resource_type=resource_type)
+
+    qr = qr.all()
+
     return qr, HTTPStatus.OK if qr else HTTPStatus.NOT_FOUND

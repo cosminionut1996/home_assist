@@ -3,11 +3,11 @@ from datetime import datetime
 from ._common import GUID
 import uuid
 
-class Group(db.Model):
-    """ Model for storing group data """
-    __tablename__ = "group"
+class Membership(db.Model):
+    """ Model for storing group membership data """
+    __tablename__ = "membership"
 
     _uuid = db.Column(GUID, primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    uuid_creator = db.Column(GUID)
+    uuid_resource = db.Column(GUID)
+    resource_type = db.Column(db.String(16))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    name = db.Column(db.String(64))
