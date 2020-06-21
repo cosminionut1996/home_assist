@@ -1,5 +1,5 @@
-from flask_restplus import Namespace, fields, Model, reqparse
-from flask_restplus.swagger import Model
+from flask_restx import Namespace, fields, Model, reqparse
+from flask_restx.swagger import Model
 
 
 class UserDto:

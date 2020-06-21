@@ -1,7 +1,7 @@
 # from http import HTTPStatus
 
 from flask import request
-from flask_restplus import Resource
+from flask_restx import Resource
 
 from ..service.invitation_service import get_invitations
 # from ..model.user import User
