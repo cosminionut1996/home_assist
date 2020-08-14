@@ -15,7 +15,7 @@ class TestGroupController(BaseUserAuthenticated):
         with self.client:
             # group creation
             response = self.client.post(
-                '/groups/',
+                '/groups',
                 data=json.dumps(dict(
                     name='Apartment'
                 )),
@@ -67,7 +67,7 @@ class TestGroupController(BaseUserAuthenticated):
         with self.client:
             # group creation
             response = self.client.post(
-                '/groups/',
+                '/groups',
                 data=json.dumps(dict(
                     name='Apartment'
                 )),
@@ -112,7 +112,7 @@ class TestGroupController(BaseUserAuthenticated):
         with self.client:
             # group creation
             response = self.client.post(
-                '/groups/',
+                '/groups',
                 data=json.dumps(dict(
                     name='Apartment'
                 )),

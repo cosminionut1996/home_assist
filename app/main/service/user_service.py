@@ -29,8 +29,8 @@ def get_all_users():
     return User.query.all()
 
 
-def get_a_user(public_id):
-    return User.query.filter_by(public_id=public_id).first()
+def get_a_user(uuid):
+    return User.query.filter_by(_uuid=uuid).first()
 
 
 def generate_token(user):

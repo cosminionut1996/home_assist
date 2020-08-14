@@ -68,6 +68,6 @@ def get_logged_in_user(new_request):
             error='Bad authentication token'
         ), HTTPStatus.UNAUTHORIZED
     else:
-        dict(
+        return dict(
             error='Provide a valid auth token'
         ), HTTPStatus.UNAUTHORIZED

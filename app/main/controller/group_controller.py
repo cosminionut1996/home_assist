@@ -7,7 +7,7 @@ from werkzeug.exceptions import BadRequest
 from ..model.user import User
 from ..service.auth_helper import get_logged_in_user
 from ..service.group_service import (create_group, delete_group, get_a_group,
-                                     get_all_groups, update_group)
+                                     get_groups, update_group)
 from ..util.decorator import token_required
 from ..util.dto import AuthDto, GroupDto
 
@@ -17,6 +17,7 @@ group_write = GroupDto.group_write
 group_post_parser = GroupDto.group_post_parser
 group_patch_parser = GroupDto.group_patch_parser
 group_write_ret = GroupDto.group_write_ret
+groups_fetch = GroupDto.groups_fetch
 
 
 @api.route('/<uuid_group>')
@@ -67,7 +68,7 @@ class Group(Resource):
             return update_group(data, uuid_group, request.user._uuid)
 
 
-@api.route('/')
+@api.route('')
 class GroupList(Resource):
     """ Group List Resource """
 
@@ -92,9 +93,15 @@ class GroupList(Resource):
         else:
             return create_group(data, request.user._uuid)
 
-    @api.doc('Returns all the groups', security='jwt')
+    @api.doc('Export a list of groups according to the parameters provided', security='jwt')
+    @api.expect(groups_fetch)
     @api.marshal_list_with(group)
     @token_required
     def get(self):
-        """ Return all groups """
-        return get_all_groups()
+        """ Export groups """
+        return get_groups(
+            request.user._uuid,
+            request.args.get('owned'),
+            request.args.get('meber'),
+            request.args.get('name')
+        )

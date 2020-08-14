@@ -32,14 +32,16 @@ class BaseUserAuthenticated(BaseTestCase):
         super().setUp()
         # user registration
         resp_register = register_user(self)
-        data_register = json.loads(resp_register.data.decode())
-        self.assertTrue(data_register['data']['Authorization'])
         self.assertTrue(resp_register.content_type == 'application/json')
-        self.assertEqual(resp_register.status_code, HTTPStatus.CREATED)
+        if not resp_register.json.get('error'):
+            self.assertTrue(resp_register.json['data']['Authorization'])
+            self.assertEqual(resp_register.status_code, HTTPStatus.CREATED)
+        else:
+            self.assertTrue(resp_register.json['error'] == 'User already exists. Please Log in.')
+            self.assertTrue(resp_register.status_code == HTTPStatus.CONFLICT)
         # user login
         resp_login = login_user(self)
-        data_login = json.loads(resp_login.data.decode())
-        self.assertTrue(data_login['data']['Authorization'])
+        self.assertTrue(resp_login.json['data']['Authorization'])
         self.assertTrue(resp_login.content_type == 'application/json')
         self.assertEqual(resp_login.status_code, HTTPStatus.OK)
 

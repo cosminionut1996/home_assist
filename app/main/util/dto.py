@@ -44,6 +44,11 @@ class GroupDto:
         'error': fields.String(description='Error message'),
     })
 
+    groups_fetch = reqparse.RequestParser()
+    groups_fetch.add_argument('owned', type=bool, location='args', help='Return the groups owned by the user')
+    groups_fetch.add_argument('member', type=bool, location='args', help='Return the groups the user is a member of')
+    groups_fetch.add_argument('name', type=str, location='args', help='Filter only the groups that contain this name')
+
 class InvitationDto:
     api = Namespace('invitations', description='invitation related operations')
 
@@ -57,8 +62,12 @@ class InvitationDto:
         'status': fields.String(description='The status of the invitation')
     })
 
-    invitations_fetch = api.model('InvitationFetch', {
-        'received': fields.Boolean(description='Return the invitations received by the user'),
-        'sent': fields.Boolean(description='Return the invitations sent by the user'),
-        'resource_type': fields.String(description='The type of resource the invitation is associated with')
-    })
+    invitation_create = api.parser()
+    invitation_create.add_argument('resource_type', type=str, location='json', help="The resource's type the invitation is associated with")
+    invitation_create.add_argument('username_invitee', type=str, location='json', help="The username of the user that will receive the invitation")
+    invitation_create.add_argument('uuid_resource', type=str, location='json', help="The resource the recipient of the invitation is invited to")
+
+    invitations_fetch = api.parser()
+    invitations_fetch.add_argument('received', type=bool, location='args', help='Return the invitations received by the user')
+    invitations_fetch.add_argument('resource_type', type=str, location='args', help='The type of resource the invitation is associated with')
+    invitations_fetch.add_argument('sent', type=bool, location='args', help='Return the invitations sent by the user')

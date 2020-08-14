@@ -1,6 +1,7 @@
 
 from app.main import db
 from app.main.model.group import Group
+from app.main.model.membership import Membership
 from http import HTTPStatus
 
 
@@ -38,8 +39,37 @@ def create_group(data, uuid_creator):
             error='Encountered an unexpected error'
         ), HTTPStatus.INTERNAL_SERVER_ERROR
 
-def get_all_groups():
-    return Group.query.all()
+def get_groups(
+    uuid_user,
+    owned=None,
+    member=None,
+    name=None
+):
+    qr = Group.query
+
+    if owned and member:
+        qr = qr.join(Membership, Membership.uuid_Resource==Group._uuid)
+        qr = qr.filter(
+            (Group.uuid_creator==uuid_user)
+            | (Membership.uuid_member==uuid_user)
+        )
+    elif owned:
+        qr = qr.filter(Group.uuid_creator==uuid_user)
+    elif member:
+        qr = qr.join(
+            Membership,
+            (Membership.uuid_resource == Group._uuid)
+            & (Membership.uuid_member == uuid_user)
+        )
+    else:
+        return list(), HTTPStatus.BAD_REQUEST
+
+    if name:
+        qr = qr.filter_by(name=name)
+
+    qr = qr.all()
+
+    return qr, HTTPStatus.OK if qr else HTTPStatus.NOT_FOUND
 
 def get_a_group(uuid_group=None, uuid_creator=None):
     # TODO: A user might want to create multiple groups and they should be stored differently
