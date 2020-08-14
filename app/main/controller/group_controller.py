@@ -1,15 +1,13 @@
 from http import HTTPStatus
 
 from flask import request
-from flask_restplus import Resource
-
+from flask_restx import Resource
 from werkzeug.exceptions import BadRequest
 
 from ..model.user import User
 from ..service.auth_helper import get_logged_in_user
-from ..service.group_service import (create_group, create_group_invite,
-                                     delete_group, get_a_group, get_all_groups,
-                                     update_group)
+from ..service.group_service import (create_group, delete_group, get_a_group,
+                                     get_groups, update_group)
 from ..util.decorator import token_required
 from ..util.dto import AuthDto, GroupDto
 
@@ -19,12 +17,10 @@ group_write = GroupDto.group_write
 group_post_parser = GroupDto.group_post_parser
 group_patch_parser = GroupDto.group_patch_parser
 group_write_ret = GroupDto.group_write_ret
-
-# group_invitation = GroupDto.group_invitation
-# group_invitation_create_ret = GroupDto.group_invitation_create_ret
+groups_fetch = GroupDto.groups_fetch
 
 
-@api.route('/<group_id>')
+@api.route('/<uuid_group>')
 @api.response(HTTPStatus.NOT_FOUND, 'Group not found')
 class Group(Resource):
     """ Group Resource """
@@ -32,10 +28,9 @@ class Group(Resource):
     @api.doc('Export a group', security='jwt')
     @api.marshal_with(group_write_ret)
     @token_required
-    def get(self, group_id):
+    def get(self, uuid_group):
         """ Export a group """
-        group_id = int(group_id)
-        group = get_a_group(group_id)
+        group = get_a_group(uuid_group)
         if group:
             return dict(
                 group=group,
@@ -47,19 +42,16 @@ class Group(Resource):
 
     @api.doc('Delete a group', security='jwt')
     @token_required
-    def delete(self, group_id):
+    def delete(self, uuid_group):
         """ Delete a group """
-        group_id = int(group_id)
-        auth_token = request.headers.get('Authorization')
-        creator_id = User.decode_auth_token(auth_token)
-        return delete_group(group_id, creator_id)
+        return delete_group(uuid_group, request.user._uuid)
 
     @api.doc('Update a group', security='jwt')
     @api.expect(group_write, validate=True)
     @api.response(HTTPStatus.BAD_REQUEST, 'Empty body / Unknown arguments')
     @api.marshal_with(group_write_ret)
     @token_required
-    def patch(self, group_id):
+    def patch(self, uuid_group):
         """ Update a group """
         if not request.json:
             return dict(
@@ -73,13 +65,10 @@ class Group(Resource):
                 error="Unknown arguments"
             ), HTTPStatus.BAD_REQUEST
         else:
-            group_id = int(group_id)
-            auth_token = request.headers.get('Authorization')
-            creator_id = User.decode_auth_token(auth_token)
-            return update_group(data, group_id, creator_id)
+            return update_group(data, uuid_group, request.user._uuid)
 
 
-@api.route('/')
+@api.route('')
 class GroupList(Resource):
     """ Group List Resource """
 
@@ -95,7 +84,6 @@ class GroupList(Resource):
                 error="Empty body"
             ), HTTPStatus.BAD_REQUEST
 
-        auth_token = request.headers.get('Authorization')
         try:
             data = group_post_parser.parse_args(strict=True)
         except BadRequest:
@@ -103,43 +91,17 @@ class GroupList(Resource):
                 error="Unknown arguments"
             ), HTTPStatus.BAD_REQUEST
         else:
-            creator_id = User.decode_auth_token(auth_token)
-            return create_group(data, creator_id)
+            return create_group(data, request.user._uuid)
 
-    @api.doc('Returns all the groups', security='jwt')
+    @api.doc('Export a list of groups according to the parameters provided', security='jwt')
+    @api.expect(groups_fetch)
     @api.marshal_list_with(group)
     @token_required
     def get(self):
-        """ Return all groups """
-        return get_all_groups()
-
-
-# class GroupInvite(Resource):
-#     """ Group Invite Resource """
-
-#     @api.doc('Export a group invite', security='jwt')
-#     @api.route('/group/<string:group_id>/invite/<string:invite_id>')
-#     def get(self):
-#         """ Return a group """
-#         return request.json
-
-
-# @api.route('/<group_id>/invitations')
-# @api.param('group_id', 'Group id for which an invitation will be created')
-# class GroupInvitationList(Resource):
-    
-#     """ Group Invitation Resource """
-#     @api.doc("Invite a user to the owner's group", security='jwt')
-#     @api.expect(group_invitation)
-#     @api.marshal_with(group_invitation_create_ret)
-#     @token_required
-#     def post(self, group_id):
-#         """ Create a new group """
-#         post_data = request.json
-#         auth_token = request.headers.get('Authorization')
-#         public_id_sender = User.decode_auth_token(auth_token)
-#         return create_group_invite(
-#             public_id_sender,
-#             post_data['public_id_invitee'],
-#             group_id
-#         )
+        """ Export groups """
+        return get_groups(
+            request.user._uuid,
+            request.args.get('owned'),
+            request.args.get('meber'),
+            request.args.get('name')
+        )

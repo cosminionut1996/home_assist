@@ -1,5 +1,5 @@
 from flask import request
-from flask_restplus import Resource
+from flask_restx import Resource
 
 from app.main.util.decorator import admin_token_required, token_required
 from ..util.dto import UserDto
@@ -28,17 +28,17 @@ class UserList(Resource):
         return save_new_user(data=data)
 
 
-@api.route('/<public_id>')
-@api.param('public_id', 'The User identifier')
+@api.route('/<uuid_user>')
+@api.param('uuid_user', 'The User identifier')
 @api.response(404, 'User not found.')
 class User(Resource):
 
     @api.doc('get a user', security='jwt')
     @api.marshal_with(_user)
     @token_required
-    def get(self, public_id):
+    def get(self, uuid_user):
         """ Get a user given its identifier"""
-        user = get_a_user(public_id)
+        user = get_a_user(uuid_user)
         if not user:
             api.abort(404)
         else:

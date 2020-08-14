@@ -1,5 +1,6 @@
 
 import datetime
+import uuid
 
 import jwt
 
@@ -7,17 +8,16 @@ from app.main.model.blacklist import BlacklistToken
 
 from .. import db, flask_bcrypt
 from ..config import key
+from ._common import GUID
 
 
 class User(db.Model):
     """ User Model for storing user related details """
     __tablename__ = "user"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    _uuid = db.Column(GUID, primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     registered_on = db.Column(db.DateTime, nullable=False)
     admin = db.Column(db.Boolean, nullable=False, default=False)
-    public_id = db.Column(db.String(100), unique=True)
     username = db.Column(db.String(50), unique=True)
     password_hash = db.Column(db.String(100))
 
@@ -33,7 +33,7 @@ class User(db.Model):
         return flask_bcrypt.check_password_hash(self.password_hash, password)
 
     @staticmethod
-    def encode_auth_token(user_id):
+    def encode_auth_token(user_uuid):
         """
         Generates the Auth Token
         :return: string
@@ -42,7 +42,7 @@ class User(db.Model):
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
                 'iat': datetime.datetime.utcnow(),
-                'sub': user_id
+                'sub': user_uuid.hex
             }
             return jwt.encode(
                 payload,
@@ -65,7 +65,7 @@ class User(db.Model):
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:
-                return payload['sub']
+                return uuid.UUID(payload['sub'])
         except jwt.ExpiredSignatureError:
             return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:
